@@ -14,7 +14,285 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      denials: {
+        Row: {
+          amount: number
+          code: string
+          count: number
+          created_at: string
+          id: string
+          provider_id: string
+          reason: string
+          report_date: string
+          trend: string
+        }
+        Insert: {
+          amount?: number
+          code: string
+          count?: number
+          created_at?: string
+          id?: string
+          provider_id: string
+          reason: string
+          report_date?: string
+          trend?: string
+        }
+        Update: {
+          amount?: number
+          code?: string
+          count?: number
+          created_at?: string
+          id?: string
+          provider_id?: string
+          reason?: string
+          report_date?: string
+          trend?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "denials_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurance_aging: {
+        Row: {
+          bucket_0_30: number
+          bucket_120_plus: number
+          bucket_31_60: number
+          bucket_61_90: number
+          bucket_91_120: number
+          created_at: string
+          id: string
+          insurance: string
+          provider_id: string
+          report_date: string
+          total: number
+        }
+        Insert: {
+          bucket_0_30?: number
+          bucket_120_plus?: number
+          bucket_31_60?: number
+          bucket_61_90?: number
+          bucket_91_120?: number
+          created_at?: string
+          id?: string
+          insurance: string
+          provider_id: string
+          report_date?: string
+          total?: number
+        }
+        Update: {
+          bucket_0_30?: number
+          bucket_120_plus?: number
+          bucket_31_60?: number
+          bucket_61_90?: number
+          bucket_91_120?: number
+          created_at?: string
+          id?: string
+          insurance?: string
+          provider_id?: string
+          report_date?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_aging_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_summaries: {
+        Row: {
+          adjustments: number
+          collection_rate: number
+          created_at: string
+          id: string
+          monthly_revenue: number
+          outstanding_ar: number
+          payments_collected: number
+          provider_id: string
+          report_date: string
+          total_charges: number
+        }
+        Insert: {
+          adjustments?: number
+          collection_rate?: number
+          created_at?: string
+          id?: string
+          monthly_revenue?: number
+          outstanding_ar?: number
+          payments_collected?: number
+          provider_id: string
+          report_date?: string
+          total_charges?: number
+        }
+        Update: {
+          adjustments?: number
+          collection_rate?: number
+          created_at?: string
+          id?: string
+          monthly_revenue?: number
+          outstanding_ar?: number
+          payments_collected?: number
+          provider_id?: string
+          report_date?: string
+          total_charges?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_summaries_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_aging: {
+        Row: {
+          balance: number
+          bucket: string
+          created_at: string
+          id: string
+          pct: number
+          provider_id: string
+          report_date: string
+        }
+        Insert: {
+          balance?: number
+          bucket: string
+          created_at?: string
+          id?: string
+          pct?: number
+          provider_id: string
+          report_date?: string
+        }
+        Update: {
+          balance?: number
+          bucket?: string
+          created_at?: string
+          id?: string
+          pct?: number
+          provider_id?: string
+          report_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_aging_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payer_mix: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          provider_id: string
+          report_date: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          provider_id: string
+          report_date?: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          provider_id?: string
+          report_date?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payer_mix_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      revenue_trends: {
+        Row: {
+          adjustments: number
+          charges: number
+          created_at: string
+          id: string
+          month: string
+          payments: number
+          provider_id: string
+          report_date: string
+        }
+        Insert: {
+          adjustments?: number
+          charges?: number
+          created_at?: string
+          id?: string
+          month: string
+          payments?: number
+          provider_id: string
+          report_date?: string
+        }
+        Update: {
+          adjustments?: number
+          charges?: number
+          created_at?: string
+          id?: string
+          month?: string
+          payments?: number
+          provider_id?: string
+          report_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_trends_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
