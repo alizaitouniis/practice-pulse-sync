@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "waicah-elementor": {
+      "type": "http",
+      "url": "https://waicah.xglobal-fx.com/wp-json/elementor/mcp/",
+      "headers": {
+        "Authorization": "Basic ${WAICAH_MCP_TOKEN}"
+      }
+    }
+  }
+}
