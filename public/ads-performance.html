@@ -91,7 +91,7 @@ button{cursor:pointer}
 .banner{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--banner-bg);border:1px solid var(--banner-line);border-radius:10px;padding:12px 16px;color:var(--accent-chart);font-size:12.5px}
 .banner span{display:flex;align-items:center;gap:10px}
 
-.filters{padding:18px 18px;display:grid;grid-template-columns:1.3fr 1.2fr 1fr 1.1fr 1fr auto;gap:16px;align-items:end}
+.filters{padding:18px 18px;display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr auto;gap:16px;align-items:end}
 .field{display:flex;flex-direction:column;gap:8px}
 .field label{font-size:13px;font-weight:600}
 .select{height:38px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 12px;font-weight:600;font-size:13.5px}
@@ -239,7 +239,6 @@ tfoot td:first-child{background:var(--bg)}
 .hl div{display:flex;gap:12px;background:#F8FAFC;border-radius:12px;padding:14px 16px;align-items:flex-start;line-height:1.5}
 .hl svg{flex-shrink:0;margin-top:2px}
 .rk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.rk.rk4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .rk .c{border:1px solid #E6E8EE;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
 .rk .l{font-size:12px;font-weight:600;color:#5B6474;display:flex;justify-content:space-between;align-items:center}
 .rk .v{font-size:24px;font-weight:600;letter-spacing:-.01em}
@@ -254,7 +253,6 @@ tfoot td:first-child{background:var(--bg)}
 .rtable th{position:static;background:#F8FAFC;color:#5B6474;font-size:10.5px;padding:10px 12px;border:0;border-bottom:1px solid #E6E8EE}
 .rtable td{position:static;padding:10px 12px;border:0;border-bottom:1px solid #F0F1F5;background:#fff}
 .rtable tbody tr{cursor:default}
-.rtable td:first-child{white-space:normal}
 .rtable .up{color:#047857;font-weight:600}.rtable .down{color:#B91C1C;font-weight:600}.rtable .flat{color:#5B6474;font-weight:600}.rtable .nw{color:var(--ra,#6D28D9);font-weight:600}
 .gloss{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;font-size:12.5px;color:#374151}
 .gloss b{color:#1F0C3A}
@@ -307,7 +305,7 @@ tfoot td:first-child{background:var(--bg)}
   .sidebar{display:none}
   .content{padding:16px}
   .topbar{padding:0 16px}
-  .rk,.rk.rk4,.hl,.r2,.gloss{grid-template-columns:1fr}
+  .rk,.hl,.r2,.gloss{grid-template-columns:1fr}
   .rsec,.rcover{padding-left:20px;padding-right:20px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -392,7 +390,6 @@ tfoot td:first-child{background:var(--bg)}
 
       <section class="card filters" aria-label="Filters">
         <div class="field"><label for="fWs">Workspace</label><select class="select" id="fWs"></select></div>
-        <div class="field"><label for="fBiz">Report type</label><select class="select" id="fBiz"></select></div>
         <div class="field"><label for="fMonth">Month</label><select class="select" id="fMonth"></select></div>
         <div class="field"><label for="fCmp">Compare to</label>
           <select class="select" id="fCmp"><option value="prev">Previous month</option><option value="yoy">Same month last year</option></select></div>
@@ -558,17 +555,13 @@ function toast(msg){ const t=$('#toast'); t.innerHTML=msg; t.classList.add('show
 /* =========================================================
    DATA ENGINE (seeded, so the same filters give the same numbers)
    ========================================================= */
-const state = { ws:'akros', biz:'ecommerce', month:CURRENT_MONTH, compare:'prev', status:'all', tab:'overview', search:'', obj:'All',
+const state = { ws:'akros', month:CURRENT_MONTH, compare:'prev', status:'all', tab:'overview', search:'', obj:'All',
   sort:{k:'spend', dir:-1}, metric:{ads:'spend', ga:'active'}, sample:'growth', pinned:new Set() };
 const cache = new Map();
-const F = ['spend','impr','clicks','conv','value','atc','co','coValue','wa','calls','reach','lpv','ic','purch','newC','revNew'];
+const F = ['spend','impr','clicks','conv','value','atc','co','coValue','wa','calls'];
 const derive = o => ({ ...o,
   ctr: o.impr ? o.clicks/o.impr*100 : null, cpc: o.clicks ? o.spend/o.clicks : null,
-  cpa: o.conv ? o.spend/o.conv : null, roas: (o.value && o.spend) ? o.value/o.spend : null,
-  // e-commerce
-  cpm: o.impr ? o.spend/o.impr*1000 : null, cpatc: o.atc ? o.spend/o.atc : null, cpic: o.ic ? o.spend/o.ic : null,
-  cpp: o.purch ? o.spend/o.purch : null, pcr: o.clicks ? o.purch/o.clicks*100 : null, aov: o.purch ? o.value/o.purch : null,
-  retC: o.purch-o.newC, revRet: o.value-o.revNew, cartAb: o.atc ? (1-o.purch/o.atc)*100 : null });
+  cpa: o.conv ? o.spend/o.conv : null, roas: (o.value && o.spend) ? o.value/o.spend : null });
 function trend(mk){ const d=monthDiff(mk); return state.sample==='growth' ? Math.max(.4,1+0.045*d) : Math.max(.4,1-0.05*d - (d===0?0.12:0)); }
 
 function campaigns(ws, mk){
@@ -585,14 +578,8 @@ function campaigns(ws, mk){
     const aov = t.aov*(0.92+0.16*r('a'));
     const value = t.aov ? Math.round(conv*aov) : 0;
     const co = Math.round(conv*t.co);
-    const atc = Math.round(conv*t.atc);
-    const purch = t.aov ? conv : 0;
-    const newC = Math.round(purch*(0.52+0.18*r('n')));
-    const o = { spend, impr, clicks, conv, value, atc, co, coValue: Math.round(co*aov),
-      wa: Math.round(conv*t.wa), calls: Math.round(conv*t.calls),
-      reach: Math.round(impr/(1.5+1.1*r('f'))), lpv: Math.round(clicks*(0.68+0.2*r('l'))),
-      ic: purch ? Math.max(purch, Math.round(purch+(atc-purch)*(0.32+0.2*r('i')))) : 0,
-      purch, newC, revNew: purch ? Math.round(value*newC/purch*(0.88+0.1*r('rn'))) : 0 };
+    const o = { spend, impr, clicks, conv, value, atc: Math.round(conv*t.atc), co, coValue: Math.round(co*aov),
+      wa: Math.round(conv*t.wa), calls: Math.round(conv*t.calls) };
     return { id:t.id, platform:t.platform, name:t.name, objective:t.objective, language:t.language,
       budget: Math.round(t.budget*s/5)*5, start:t.start, end:t.end, status:t.status, running, m: derive(o) };
   });
@@ -647,15 +634,6 @@ Chart.defaults.font.family="'Poppins',system-ui,sans-serif"; Chart.defaults.font
 /* =========================================================
    RENDER
    ========================================================= */
-// Report types from "Ads Performance Report Metrics". Lead generation and brand awareness are listed but not built yet.
-const BIZ = [
-  {id:'ecommerce',label:'E-commerce'},
-  {id:'lead',label:'Lead generation (coming soon)',soon:true},
-  {id:'awareness',label:'Brand awareness (coming soon)',soon:true},
-  {id:'general',label:'General (all conversions)'},
-];
-const bizOptions = () => BIZ.map(b=>`<option value="${b.id}"${b.soon?' disabled':''}>${b.label}</option>`).join('');
-const isEC = () => state.biz==='ecommerce';
 const TABS = [{id:'overview',label:'Overview'},{id:'google',label:'Google Ads'},{id:'meta',label:'Meta Ads'},{id:'ga',label:'Google Analytics'}];
 const ADS_METRICS = [{id:'spend',label:'Spend',money:true},{id:'clicks',label:'Clicks'},{id:'conv',label:'Conversions'},{id:'value',label:'Conv. value',money:true}];
 const GA_METRICS = [{id:'active',label:'Active users'},{id:'newU',label:'New users'}];
@@ -691,16 +669,7 @@ function render(){
 
   // KPIs
   let k;
-  if (tab==='overview' && isEC()) k = [
-    {label:'Amount spent',cur:T.c.spend,prev:T.p.spend,f:fmt.money,mode:'neutral'},
-    {label:'Purchases',cur:T.c.purch,prev:T.p.purch,f:fmt.int},
-    {label:'Revenue',cur:T.c.value,prev:T.p.value,f:fmt.money},
-    {label:'ROAS',cur:T.c.roas,prev:T.p.roas,f:fmt.x},
-    {label:'Cost per purchase',cur:T.c.cpp,prev:T.p.cpp,f:fmt.money2,mode:'down'},
-    {label:'CTR',cur:T.c.ctr,prev:T.p.ctr,f:fmt.pct},
-    {label:'CPC',cur:T.c.cpc,prev:T.p.cpc,f:fmt.money2,mode:'down'},
-    {label:'Website active users',cur:g.active,prev:gp.active,f:fmt.int}];
-  else if (tab==='overview') k = [
+  if (tab==='overview') k = [
     {label:'Amount spent',cur:T.c.spend,prev:T.p.spend,f:fmt.money,mode:'neutral'},
     {label:'Conversions',cur:T.c.conv,prev:T.p.conv,f:fmt.int},
     {label:'Conversion value',cur:T.c.value,prev:T.p.value,f:fmt.money},
@@ -720,13 +689,9 @@ function render(){
     {label:'Clicks',cur:T.c.clicks,prev:T.p.clicks,f:fmt.int},
     {label:'CTR',cur:T.c.ctr,prev:T.p.ctr,f:fmt.pct},
     {label:'CPC',cur:T.c.cpc,prev:T.p.cpc,f:fmt.money2,mode:'down'},
-    ...(isEC() ? [
-    {label:'Purchases',cur:T.c.purch,prev:T.p.purch,f:fmt.int},
-    {label:'Revenue',cur:T.c.value,prev:T.p.value,f:fmt.money},
-    {label:'Cost per purchase',cur:T.c.cpp,prev:T.p.cpp,f:fmt.money2,mode:'down'}] : [
     {label:'Conversions',cur:T.c.conv,prev:T.p.conv,f:fmt.int},
     {label:'Conversion value',cur:T.c.value,prev:T.p.value,f:fmt.money},
-    {label:'Cost per conversion',cur:T.c.cpa,prev:T.p.cpa,f:fmt.money2,mode:'down'}]),
+    {label:'Cost per conversion',cur:T.c.cpa,prev:T.p.cpa,f:fmt.money2,mode:'down'},
     {label:'ROAS',cur:T.c.roas,prev:T.p.roas,f:fmt.x},
     {label:'Daily budget',cur:list.filter(r=>r.running).reduce((a,r)=>a+r.budget,0),f:fmt.money,note:'Sum of running campaigns'}];
   $('#kpis').style.gridTemplateColumns = `repeat(${k.length===10?5:4},minmax(0,1fr))`;
@@ -736,12 +701,11 @@ function render(){
   const seg = $('#metricSeg');
   if (tab==='overview'){
     seg.style.display='none';
-    const ec=isEC(), rk=ec?'purch':'conv', rl=ec?'Purchases':'Conversions';
-    $('#c1t').textContent=ec?'Ad spend vs purchases · last 6 months':'Last 6 months'; $('#c1s').textContent=`Amount spent (bars) and ${rl.toLowerCase()} (line), all platforms`;
+    $('#c1t').textContent='Last 6 months'; $('#c1s').textContent='Amount spent (bars) and conversions (line), all platforms';
     const months=[...Array(6)].map((_,i)=>addM(state.month,i-5));
     const tots=months.map(mk=>sumRows(campaigns(state.ws,mk)));
     mkChart('c1',{type:'bar',data:{labels:months.map(m=>mShort(m)),datasets:[
-      {type:'line',label:rl,data:tots.map(x=>x[rk]),yAxisID:'y1',borderColor:t.line,backgroundColor:t.line,tension:.35,pointRadius:4,pointHoverRadius:6,order:0},
+      {type:'line',label:'Conversions',data:tots.map(x=>x.conv),yAxisID:'y1',borderColor:t.line,backgroundColor:t.line,tension:.35,pointRadius:4,pointHoverRadius:6,order:0},
       {label:'Amount spent',data:tots.map(x=>x.spend),backgroundColor:months.map(m=>m===state.month?t.accent:t.prev),borderRadius:6,maxBarThickness:46,order:1}]},
       options:opts(t,{money:true,y1:true})});
   } else {
@@ -769,8 +733,7 @@ function render(){
       options:{responsive:true,maintainAspectRatio:false,cutout:'64%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8,color:t.muted,padding:12}},tooltip:{backgroundColor:'#1F0C3A',callbacks:{label:c=>' '+c.label+': '+fmt.int(c.parsed)+' ('+(c.parsed/g.active*100).toFixed(1)+'%)'}}}}});
   } else {
     $('#c2t').textContent='Conversion actions'; $('#c2s').textContent=`${curS()} vs ${prevS()}, by action type`;
-    const acts=isEC() ? [['Add to cart','atc'],['Initiated checkout','ic'],['Purchases','purch']]
-      : [['Add to cart','atc'],['Final checkout','co'],['WhatsApp clicks','wa'],['Call clicks','calls']];
+    const acts=[['Add to cart','atc'],['Final checkout','co'],['WhatsApp clicks','wa'],['Call clicks','calls']];
     mkChart('c2',{type:'bar',data:{labels:acts.map(a=>a[0]),datasets:[
       {label:mLabel(state.month),data:acts.map(a=>T.c[a[1]]),backgroundColor:t.accent,borderRadius:5,maxBarThickness:26},
       {label:mLabel(cmpKey()),data:acts.map(a=>T.p[a[1]]),backgroundColor:t.prev,borderRadius:5,maxBarThickness:26}]},options:opts(t)});
@@ -779,7 +742,7 @@ function render(){
   // --- Chart 3 + side card
   const side = $('#side');
   if (tab==='overview'){
-    $('#c3t').textContent='Google Ads vs Meta Ads'; $('#c3s').textContent=`Amount spent and ${isEC()?'revenue':'conversion value'} per platform`;
+    $('#c3t').textContent='Google Ads vs Meta Ads'; $('#c3s').textContent='Amount spent and conversion value per platform';
     const G = sumRows(pairs.filter(r=>r.platform==='Google Ads').map(r=>({m:r.c}))), Gp=sumRows(pairs.filter(r=>r.platform==='Google Ads').map(r=>({m:r.p})));
     const M = sumRows(pairs.filter(r=>r.platform==='Meta Ads').map(r=>({m:r.c}))), Mp=sumRows(pairs.filter(r=>r.platform==='Meta Ads').map(r=>({m:r.p})));
     $('#c3box').style.height='280px';
@@ -787,13 +750,12 @@ function render(){
       {label:mLabel(state.month),data:[G.spend,G.value,M.spend,M.value],backgroundColor:t.accent,borderRadius:5,maxBarThickness:34},
       {label:mLabel(cmpKey()),data:[Gp.spend,Gp.value,Mp.spend,Mp.value],backgroundColor:t.prev,borderRadius:5,maxBarThickness:34}]},options:opts(t,{money:true})});
     $('#c4t').textContent='Platform summary'; $('#c4s').textContent='Results and efficiency per platform';
-    const [rk,ck,rl,cl]=isEC()?['purch','cpp','Purchases','Cost / purchase']:['conv','cpa','Conversions','Cost / conv.'];
     side.innerHTML = [['Google Ads',G,Gp,'google'],['Meta Ads',M,Mp,'meta']].map(([n,c,p,id])=>{
-      const dc=delta(c[rk],p[rk]), dr=delta(c.roas,p.roas), da=delta(c[ck],p[ck],'down');
+      const dc=delta(c.conv,p.conv), dr=delta(c.roas,p.roas), da=delta(c.cpa,p.cpa,'down');
       return `<button class="side-item" data-goto="${id}"><div class="top"><span>${n}</span><span class="t-mut" style="font-weight:500;font-size:12px">${fmt.money(c.spend)} spent</span></div>
-        <div class="meta"><span>${rl} <b style="color:var(--text)">${fmt.int(c[rk])}</b></span><span class="d ${dc.cls}">${dc.t}</span></div>
+        <div class="meta"><span>Conversions <b style="color:var(--text)">${fmt.int(c.conv)}</b></span><span class="d ${dc.cls}">${dc.t}</span></div>
         <div class="meta"><span>ROAS <b style="color:var(--text)">${fmt.x(c.roas)}</b></span><span class="d ${dr.cls}">${dr.t}</span></div>
-        <div class="meta"><span>${cl} <b style="color:var(--text)">${fmt.money2(c[ck])}</b></span><span class="d ${da.cls}">${da.t}</span></div>
+        <div class="meta"><span>Cost / conv. <b style="color:var(--text)">${fmt.money2(c.cpa)}</b></span><span class="d ${da.cls}">${da.t}</span></div>
         <div class="meta"><span style="color:var(--accent-chart);font-weight:600">Open ${n} tab</span></div></button>`;}).join('');
   } else if (isGA){
     $('#c3t').textContent='Users by channel'; $('#c3s').textContent=`${curS()} vs ${prevS()}`;
@@ -917,6 +879,9 @@ function closeDrawer(){ $('#drawer').classList.remove('open'); $('#drawer').setA
 /* =========================================================
    CLIENT REPORT (customizable)
    ========================================================= */
+const RSEC = {highlights:'The month at a glance',kpis:'Key results',trend:'Six-month trend',sources:'Where results came from',
+  website:'Your website',campaigns:'Top campaigns',notes:'Notes and next steps',glossary:'What these terms mean'};
+const ORDER = Object.keys(RSEC);
 const RKPI = {
   spend:{l:'Ad spend',g:T=>[T.c.spend,T.p.spend],f:fmt.money,m:'neutral'},
   conv:{l:'Conversions',g:T=>[T.c.conv,T.p.conv],f:fmt.int},
@@ -933,90 +898,35 @@ const RKPI = {
   calls:{l:'Phone calls',g:T=>[T.c.calls,T.p.calls],f:fmt.int},
   visitors:{l:'Website visitors',g:(T,g,gp)=>[g.active,gp.active],f:fmt.int},
   newusers:{l:'New visitors',g:(T,g,gp)=>[g.newU,gp.newU],f:fmt.int},
-  // e-commerce
-  purch:{l:'Purchases',g:T=>[T.c.purch,T.p.purch],f:fmt.int},
-  rev:{l:'Revenue',g:T=>[T.c.value,T.p.value],f:fmt.money},
-  cpp:{l:'Cost per purchase',g:T=>[T.c.cpp,T.p.cpp],f:fmt.money2,m:'down'},
-  wau:{l:'Website active users',g:(T,g,gp)=>[g.active,gp.active],f:fmt.int},
-  reach:{l:'Reach',g:T=>[T.c.reach,T.p.reach],f:fmt.int},
-  cpm:{l:'CPM',g:T=>[T.c.cpm,T.p.cpm],f:fmt.money2,m:'down'},
-  lpv:{l:'Landing page views',g:T=>[T.c.lpv,T.p.lpv],f:fmt.int},
-  cpatc:{l:'Cost per add to cart',g:T=>[T.c.cpatc,T.p.cpatc],f:fmt.money2,m:'down'},
-  ic:{l:'Initiated checkout',g:T=>[T.c.ic,T.p.ic],f:fmt.int},
-  cpic:{l:'Cost per checkout',g:T=>[T.c.cpic,T.p.cpic],f:fmt.money2,m:'down'},
-  pcr:{l:'Purchase conversion rate',g:T=>[T.c.pcr,T.p.pcr],f:fmt.pct},
-  aov:{l:'Average order value',g:T=>[T.c.aov,T.p.aov],f:fmt.money2},
-  newC:{l:'New customers',g:T=>[T.c.newC,T.p.newC],f:fmt.int},
-  retC:{l:'Returning customers',g:T=>[T.c.retC,T.p.retC],f:fmt.int},
-  revNew:{l:'Revenue from new customers',g:T=>[T.c.revNew,T.p.revNew],f:fmt.money},
-  revRet:{l:'Revenue from returning customers',g:T=>[T.c.revRet,T.p.revRet],f:fmt.money},
-  cartAb:{l:'Cart abandonment rate',g:T=>[T.c.cartAb,T.p.cartAb],f:fmt.pct,m:'down'},
 };
-const PRESET_NAMES = {standard:'Standard monthly',executive:'Executive summary',detailed:'Detailed performance'};
-const EC_KPIS = ['spend','purch','rev','roas','cpp','ctr','cpc','wau'];
-const EC_SUPPORT = ['impr','reach','cpm','clicks','lpv','atc','cpatc','ic','cpic','purch','cpp','pcr','rev','roas','aov','newC','retC','revNew','revRet','cartAb'];
-// Each report type has its own sections, result cards, templates and ranking options.
-const RTYPES = {
-  ecommerce:{
-    secs:{highlights:'The month at a glance',kpis:'Key results',trend:'Six-month trend',funnel:'Conversion actions',
-      platforms:'Revenue by platform',roas:'ROAS by campaign',campaigns:'Top performing campaigns',customers:'New and returning customers',
-      website:'Users by acquisition channel',details:'Supporting metrics',notes:'Notes and next steps',glossary:'What these terms mean'},
-    kpiList:[...EC_KPIS,...EC_SUPPORT.filter(k=>!EC_KPIS.includes(k))],
-    presets:{
-      standard:{off:['details'],kpis:EC_KPIS,topN:5},
-      executive:{off:['funnel','roas','customers','website','details','glossary'],kpis:['spend','purch','rev','roas'],topN:3},
-      detailed:{off:[],kpis:[...EC_KPIS,'lpv','atc','ic','aov','newC','cartAb'],topN:10}},
-    sorts:{purch:'Purchases',value:'Revenue',roas:'ROAS',spend:'Spend'},
-  },
-  general:{
-    secs:{highlights:'The month at a glance',kpis:'Key results',trend:'Six-month trend',sources:'Where results came from',
-      website:'Your website',campaigns:'Top campaigns',notes:'Notes and next steps',glossary:'What these terms mean'},
-    kpiList:['spend','conv','value','roas','cpa','impr','clicks','ctr','cpc','atc','co','wa','calls','visitors','newusers'],
-    presets:{
-      standard:{off:[],kpis:['spend','conv','value','roas','cpa','visitors'],topN:5},
-      executive:{off:['sources','website','campaigns','glossary'],kpis:['spend','conv','value','roas'],topN:3},
-      detailed:{off:[],kpis:['spend','impr','clicks','ctr','cpc','conv','value','cpa','roas','atc','co','visitors'],topN:10}},
-    sorts:{conv:'Conversions',value:'Sales',spend:'Spend',roas:'ROAS'},
-  },
+const PRESETS = {
+  standard:{name:'Standard monthly',off:[],kpis:['spend','conv','value','roas','cpa','visitors'],topN:5},
+  executive:{name:'Executive summary',off:['sources','website','campaigns','glossary'],kpis:['spend','conv','value','roas'],topN:3},
+  detailed:{name:'Detailed performance',off:[],kpis:['spend','impr','clicks','ctr','cpc','conv','value','cpa','roas','atc','co','visitors'],topN:10},
 };
-const RT = () => RTYPES[rc.type] || RTYPES.general;
-const secName = id => RT().secs[id];
 const ACCENTS=['#6D28D9','#1F0C3A','#0EA5E9','#059669','#E11D48','#EA580C'];
 const COVERS=['#1F0C3A','#6D28D9','#0F172A','#134E4A','#7F1D1D'];
 let userTpls={}; try{ userTpls=JSON.parse(localStorage.getItem('agencyos-report-templates')||'{}'); }catch(e){}
 const saveTpls=()=>{ try{ localStorage.setItem('agencyos-report-templates',JSON.stringify(userTpls)); }catch(e){} };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function freshRC(type=state.biz){
-  const t=RTYPES[type]?type:'general';
-  const r={type:t,template:'standard',title:t==='ecommerce'?'E-commerce performance report':'Monthly performance report',agency:'IIS E-Solutions',accent:'#6D28D9',cover:'#1F0C3A',
-    google:true,meta:true,sections:[],kpis:[],topN:5,topSort:Object.keys(RTYPES[t].sorts)[0],
-    notes:'',manager:'[Name]',email:'[email]',text:{}};
-  return r;
-}
-let rc=freshRC(); applyTemplate('standard');
+function freshRC(){ return {template:'standard',title:'Monthly performance report',agency:'IIS E-Solutions',accent:'#6D28D9',cover:'#1F0C3A',
+  google:true,meta:true,sections:ORDER.map(id=>({id,on:true})),kpis:[...PRESETS.standard.kpis],topN:5,topSort:'conv',
+  notes:'',manager:'[Name]',email:'[email]',text:{}}; }
+let rc=freshRC();
 function applyTemplate(key){
-  if(PRESET_NAMES[key]){const p=RT().presets[key]; rc.sections=Object.keys(RT().secs).map(id=>({id,on:!p.off.includes(id)})); rc.kpis=[...p.kpis]; rc.topN=p.topN;}
-  else if(userTpls[key]){ rc={...JSON.parse(JSON.stringify(userTpls[key].rc)),text:{}}; rc.type=rc.type||'general'; state.biz=rc.type; }
+  if(PRESETS[key]){const p=PRESETS[key]; rc.sections=ORDER.map(id=>({id,on:!p.off.includes(id)})); rc.kpis=[...p.kpis]; rc.topN=p.topN;}
+  else if(userTpls[key]){ rc={...JSON.parse(JSON.stringify(userTpls[key].rc)),text:{}}; }
   rc.template=key;
-}
-// Switch the report to another business type, keeping branding and contact details.
-function setReportType(type){
-  const keep={agency:rc.agency,accent:rc.accent,cover:rc.cover,google:rc.google,meta:rc.meta,notes:rc.notes,manager:rc.manager,email:rc.email};
-  const tpl=PRESET_NAMES[rc.template]?rc.template:'standard';
-  state.biz=type; rc=Object.assign(freshRC(type),keep); applyTemplate(tpl);
 }
 function lighten(hex,a){const n=parseInt(hex.slice(1),16);const r=n>>16,g=n>>8&255,b=n&255;const m=v=>Math.round(v+(255-v)*a).toString(16).padStart(2,'0');return '#'+m(r)+m(g)+m(b);}
 
 function renderPanel(){
   const up='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg>';
-  const tplOpts=Object.entries(PRESET_NAMES).map(([k,n])=>`<option value="${k}">${n}</option>`).join('')+
+  const tplOpts=Object.entries(PRESETS).map(([k,p])=>`<option value="${k}">${p.name}</option>`).join('')+
     (Object.keys(userTpls).length?`<optgroup label="Saved templates">${Object.entries(userTpls).map(([k,u])=>`<option value="${k}">${esc(u.name)}</option>`).join('')}</optgroup>`:'');
   const months=[...Array(6)].map((_,i)=>addM(CURRENT_MONTH,-i)).map(m=>`<option value="${m}">${mLabel(m)}</option>`).join('');
   $('#rpanel').innerHTML=`
   <div class="rp-tip">Click any heading, highlight or the client name in the report to edit the text directly.</div>
-  <div class="rp-block"><h4>Report type</h4><p>Sets the result cards, charts and wording for this kind of business.</p>
-    <label class="rp-f"><span class="sr">Report type</span><select id="rpType">${bizOptions()}</select></label>
-  </div>
   <div class="rp-block"><h4>Template</h4>
     <label class="rp-f">Start from<select id="rpTpl">${tplOpts}</select></label>
     <div class="rp-row"><label class="rp-f">Save current setup as<input id="rpTplName" placeholder="e.g. DeFacto monthly"></label><button class="rp-btn primary" id="rpSave">Save</button></div>
@@ -1038,14 +948,14 @@ function renderPanel(){
   <div class="rp-block"><h4>Key result cards</h4><p>Pick the numbers that matter to this client.</p><div class="rp-chips" id="rpKpis"></div></div>
   <div class="rp-block"><h4>Top campaigns</h4>
     <div class="rp-row"><label class="rp-f">Show<select id="rpTopN"><option value="3">Top 3</option><option value="5">Top 5</option><option value="10">Top 10</option></select></label>
-    <label class="rp-f">Ranked by<select id="rpTopSort">${Object.entries(RT().sorts).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></label></div>
+    <label class="rp-f">Ranked by<select id="rpTopSort"><option value="conv">Conversions</option><option value="value">Sales</option><option value="spend">Spend</option><option value="roas">ROAS</option></select></label></div>
   </div>
   <div class="rp-block"><h4>Notes and next steps</h4><label class="rp-f"><span class="sr">Notes</span><textarea id="rpNotes" placeholder="What worked this month, what you'll change next month…"></textarea></label></div>
   <div class="rp-block"><h4>Contact</h4>
     <div class="rp-row"><label class="rp-f">Account manager<input id="rpMgr"></label><label class="rp-f">Email<input id="rpEmail"></label></div>
   </div>
   <div class="rp-row"><button class="rp-btn" id="rpResetText">Clear text edits</button><button class="rp-btn" id="rpReset">Reset to template</button></div>`;
-  $('#rpType').value=rc.type; $('#rpTpl').value=rc.template; $('#rpMonth').value=state.month; $('#rpCmp').value=state.compare;
+  $('#rpTpl').value=rc.template; $('#rpMonth').value=state.month; $('#rpCmp').value=state.compare;
   $('#rpG').checked=rc.google; $('#rpM').checked=rc.meta;
   $('#rpTitle').value=rc.title; $('#rpAgency').value=rc.agency; $('#rpAccentC').value=rc.accent; $('#rpCoverC').value=rc.cover;
   $('#rpTopN').value=rc.topN; $('#rpTopSort').value=rc.topSort; $('#rpNotes').value=rc.notes; $('#rpMgr').value=rc.manager; $('#rpEmail').value=rc.email;
@@ -1055,11 +965,11 @@ function renderPanel(){
 function renderSecList(){
   const up='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg>';
   const dn='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
-  $('#rpSecs').innerHTML=rc.sections.map((s,i)=>`<li><label><input type="checkbox" data-sec="${s.id}" ${s.on?'checked':''}>${secName(s.id)}</label>
-    <button class="mv" data-move="${s.id}:-1" ${i===0?'disabled':''} aria-label="Move ${secName(s.id)} up">${up}</button>
-    <button class="mv" data-move="${s.id}:1" ${i===rc.sections.length-1?'disabled':''} aria-label="Move ${secName(s.id)} down">${dn}</button></li>`).join('');
+  $('#rpSecs').innerHTML=rc.sections.map((s,i)=>`<li><label><input type="checkbox" data-sec="${s.id}" ${s.on?'checked':''}>${RSEC[s.id]}</label>
+    <button class="mv" data-move="${s.id}:-1" ${i===0?'disabled':''} aria-label="Move ${RSEC[s.id]} up">${up}</button>
+    <button class="mv" data-move="${s.id}:1" ${i===rc.sections.length-1?'disabled':''} aria-label="Move ${RSEC[s.id]} down">${dn}</button></li>`).join('');
 }
-function renderKpiChips(){ $('#rpKpis').innerHTML=RT().kpiList.map(k=>`<button data-kpi="${k}" class="${rc.kpis.includes(k)?'on':''}" aria-pressed="${rc.kpis.includes(k)}">${RKPI[k].l}</button>`).join(''); }
+function renderKpiChips(){ $('#rpKpis').innerHTML=Object.entries(RKPI).map(([k,v])=>`<button data-kpi="${k}" class="${rc.kpis.includes(k)?'on':''}" aria-pressed="${rc.kpis.includes(k)}">${v.l}</button>`).join(''); }
 function markSwatches(){ $$('#rpAccent [data-accent]').forEach(b=>b.classList.toggle('on',b.dataset.accent.toLowerCase()===rc.accent.toLowerCase()));
   $$('#rpCover [data-cover]').forEach(b=>b.classList.toggle('on',b.dataset.cover.toLowerCase()===rc.cover.toLowerCase())); }
 
@@ -1073,22 +983,14 @@ function renderReport(){
   const on=id=>rc.sections.find(s=>s.id===id)?.on;
   const cur=mLabel(state.month), prv=mLabel(cmpKey()), prvM=mShort(cmpKey(),state.compare==='yoy'), curM=mShort(state.month,state.compare==='yoy');
   const ed=(key,def)=>`<span contenteditable="true" data-edit="${key}" spellcheck="false">${rc.text[key]??def}</span>`;
-  const h3=id=>`<h3 contenteditable="true" data-edit="t_${id}" spellcheck="false">${rc.text['t_'+id]??secName(id)}</h3>`;
+  const h3=id=>`<h3 contenteditable="true" data-edit="t_${id}" spellcheck="false">${rc.text['t_'+id]??RSEC[id]}</h3>`;
   const word=(d,up='up',down='down')=>d.ch==null?'new':(d.ch>=0?up:down)+' '+Math.abs(d.ch).toFixed(0)+'%';
   const icon=cls=>{const c=cls==='pos'?'#047857':cls==='neg'?'#B91C1C':A;const p=cls==='neg'?'M12 5v14M6 13l6 6 6-6':cls==='pos'?'M12 19V5M6 11l6-6 6 6':'M5 12h14M13 6l6 6-6 6';return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>`;};
-  const ec=rc.type==='ecommerce';
   const dC=delta(T.c.conv,T.p.conv), dR=delta(T.c.roas,T.p.roas), dA=delta(T.c.cpa,T.p.cpa,'down'), dU=delta(g.active,gp.active);
-  const dV=delta(T.c.value,T.p.value), dCp=delta(T.c.cpp,T.p.cpp,'down'), dO=delta(T.c.aov,T.p.aov);
   const topCh=[...g.channels].sort((a,b)=>b.users-a.users)[0];
-  const roasHl=[dR.cls,`Every $1 spent on ads returned <b>${T.c.roas?'$'+T.c.roas.toFixed(2):'—'}</b> in sales, compared with ${T.p.roas?'$'+T.p.roas.toFixed(2):'—'} in ${prvM}.`];
-  const hls=ec ? [
-    [dV.cls,`Your ads brought <b>${fmt.int(T.c.purch)} purchases</b> worth <b>${fmt.money(T.c.value)}</b>, ${word(dV)} in revenue compared with ${prvM}.`],
-    roasHl,
-    [dCp.cls,`Each purchase cost <b>${fmt.money2(T.c.cpp)}</b> in ads on average, ${word(dCp)} from ${fmt.money2(T.p.cpp)}.`],
-    [dO.cls,`The average order was <b>${fmt.money2(T.c.aov)}</b>, and <b>${fmt.int(T.c.newC)} new customers</b> bought for the first time.`],
-  ] : [
+  const hls=[
     [dC.cls,`Your ads brought <b>${fmt.int(T.c.conv)} conversions</b>, ${word(dC)} compared with ${prvM}.`],
-    roasHl,
+    [dR.cls,`Every $1 spent on ads returned <b>${T.c.roas?'$'+T.c.roas.toFixed(2):'—'}</b> in sales, compared with ${T.p.roas?'$'+T.p.roas.toFixed(2):'—'} in ${prvM}.`],
     [dA.cls,`Each conversion cost <b>${fmt.money2(T.c.cpa)}</b> on average, ${word(dA)} from ${fmt.money2(T.p.cpa)}.`],
   ];
   if(on('website')) hls.push([dU.cls,`<b>${fmt.int(g.active)} people</b> visited your website (${word(dU)}). Most came from ${topCh.name}.`]);
@@ -1101,10 +1003,10 @@ function renderReport(){
   const chg=(c,p,m)=>{const d=delta(c,p,m||'up');const cl=d.cls==='pos'?'up':d.cls==='neg'?'down':d.cls==='new'?'nw':'flat';return `<span class="${cl}">${d.t}</span>`;};
   const pin=r=>state.pinned.has(r.id)?1:0;
   const top=act.filter(r=>r.c.spend>0).sort((a,b)=>(pin(b)-pin(a))||((b.c[rc.topSort]||0)-(a.c[rc.topSort]||0))).slice(0,rc.topN);
-  const sortLbl={conv:'conversions',purch:'purchases',value:ec?'revenue':'sales',spend:'spend',roas:'return on ad spend'}[rc.topSort];
+  const sortLbl={conv:'conversions',value:'sales',spend:'spend',roas:'return on ad spend'}[rc.topSort];
   const S={
     highlights:()=>`<section class="rsec">${h3('highlights')}<div class="hl">${hls.map((x,i)=>`<div>${icon(x[0])}${ed('hl'+i,x[1])}</div>`).join('')}</div></section>`,
-    kpis:()=>`<section class="rsec">${h3('kpis')}<p class="rintro">Dark bars show ${curM}, light bars show ${prvM}.</p><div class="rk${rc.kpis.length%4===0?' rk4':''}">${rc.kpis.map(kc).join('')}</div></section>`,
+    kpis:()=>`<section class="rsec">${h3('kpis')}<p class="rintro">Dark bars show ${curM}, light bars show ${prvM}.</p><div class="rk">${rc.kpis.map(kc).join('')}</div></section>`,
     trend:()=>`<section class="rsec">${h3('trend')}<p class="rintro">Ad spend (bars) and conversions (line) over the last six months.</p><div class="rchart" style="height:270px"><canvas id="rp1"></canvas></div></section>`,
     sources:()=>`<section class="rsec">${h3('sources')}<div class="r2">
       <div class="rbox"><h4>Actions customers took</h4><p>${curM} vs ${prvM}</p><div class="rchart"><canvas id="rp2"></canvas></div></div>
@@ -1130,56 +1032,7 @@ function renderReport(){
       <div><b>Website visitors</b> · people active on your site during the month (GA4).</div>
       <div><b>Change</b> · ▲ / ▼ shows the difference vs ${prv}.</div></div></section>`,
   };
-  const roasRows=act.filter(r=>r.c.roas).sort((a,b)=>b.c.roas-a.c.roas);
-  const steps=[['Landing page views','lpv',null],['Added to cart','atc','cpatc'],['Initiated checkout','ic','cpic'],['Purchases','purch','cpp']];
-  const metricTable=ks=>`<table class="rtable"><thead><tr><th>Metric</th><th>${curM}</th><th>${prvM}</th><th>Change</th></tr></thead><tbody>
-    ${ks.map(k=>{const d=RKPI[k];const [c,p]=d.g(T,g,gp);return `<tr><td>${d.l}</td><td><b>${d.f(c)}</b></td><td>${d.f(p)}</td><td>${chg(c,p,d.m)}</td></tr>`;}).join('')}</tbody></table>`;
-  if(ec) Object.assign(S,{
-    trend:()=>`<section class="rsec">${h3('trend')}
-      <div class="rbox"><h4>Ad spend vs purchases</h4><p>Ad spend (bars) and purchases (line), last six months.</p><div class="rchart" style="height:250px"><canvas id="rp1"></canvas></div></div>
-      <div class="rbox"><h4>Revenue vs ad spend</h4><p>Revenue from ads next to what was spent to get it, last six months.</p><div class="rchart" style="height:250px"><canvas id="rp5"></canvas></div></div></section>`,
-    funnel:()=>`<section class="rsec">${h3('funnel')}<p class="rintro">The steps shoppers took after clicking an ad.</p><div class="r2">
-      <div class="rbox"><h4>Shopping actions</h4><p>${curM} vs ${prvM}</p><div class="rchart"><canvas id="rp2"></canvas></div></div>
-      <div class="rbox"><h4>Shopping funnel</h4><p>Rate is the share of the step before. Cost is ad spend per action.</p>
-        <table class="rtable"><thead><tr><th>Step</th><th>${curM}</th><th>Rate</th><th>Cost</th><th>Change</th></tr></thead><tbody>
-        ${steps.map(([l,k,ck],i)=>{const pk=i?steps[i-1][1]:null;return `<tr><td><b>${l}</b></td><td>${fmt.int(T.c[k])}</td><td>${pk&&T.c[pk]?(T.c[k]/T.c[pk]*100).toFixed(1)+'%':'—'}</td><td>${ck?fmt.money2(T.c[ck]):'—'}</td><td>${chg(T.c[k],T.p[k])}</td></tr>`;}).join('')}
-        </tbody></table>
-        <p>Cart abandonment rate <b>${fmt.pct(T.c.cartAb)}</b> (${fmt.pct(T.p.cartAb)} in ${prvM}). Purchase conversion rate <b>${fmt.pct(T.c.pcr)}</b> of clicks.</p></div></div></section>`,
-    platforms:()=>`<section class="rsec">${h3('platforms')}
-      ${plats.length>1?`<div class="r2"><div class="rbox"><h4>Share of revenue</h4><p>${curM}</p><div class="rchart" style="height:190px"><canvas id="rp3"></canvas></div></div>
-        <div class="rbox"><h4>Share of ad spend</h4><p>${curM}</p><div class="rchart" style="height:190px"><canvas id="rp8"></canvas></div></div></div>`:''}
-      <table class="rtable"><thead><tr><th>Platform</th><th>Spend</th><th>Purchases</th><th>Revenue</th><th>ROAS</th><th>Cost / purchase</th><th>Revenue vs ${prvM}</th></tr></thead><tbody>
-      ${PL.map(x=>`<tr><td><b>${x.n}</b></td><td>${fmt.money(x.c.spend)}</td><td>${fmt.int(x.c.purch)}</td><td>${fmt.money(x.c.value)}</td><td>${fmt.x(x.c.roas)}</td><td>${fmt.money2(x.c.cpp)}</td><td>${chg(x.c.value,x.p.value)}</td></tr>`).join('')}
-      </tbody></table></section>`,
-    roas:()=>`<section class="rsec">${h3('roas')}<p class="rintro">Revenue returned for every $1 spent, ${curM} vs ${prvM}. Campaigns without sales are left out.</p>
-      ${roasRows.length?`<div class="rchart" style="height:${Math.max(180,roasRows.length*46+60)}px"><canvas id="rp6"></canvas></div>`:'<p class="ph">No campaigns with revenue this month.</p>'}</section>`,
-    campaigns:()=>`<section class="rsec">${h3('campaigns')}<p class="rintro">Ranked by ${sortLbl}${state.pinned.size?'; highlighted campaigns first':''}.</p>
-      <table class="rtable"><thead><tr><th>Campaign</th><th>Spend</th><th>Purchases</th><th>Revenue</th><th>ROAS</th><th>Cost / purchase</th><th>Purchases vs ${prvM}</th></tr></thead><tbody>
-      ${top.map(r=>`<tr><td><b>${r.name}</b>${pin(r)?' ★':''}<div style="font-size:11px;color:#5B6474">${r.platform}</div></td><td>${fmt.money(r.c.spend)}</td><td>${fmt.int(r.c.purch)}</td><td>${fmt.money(r.c.value)}</td><td>${fmt.x(r.c.roas)}</td><td>${fmt.money2(r.c.cpp)}</td><td>${chg(r.c.purch,r.p.purch)}</td></tr>`).join('')}
-      </tbody></table></section>`,
-    customers:()=>`<section class="rsec">${h3('customers')}<p class="rintro">Purchases from first-time buyers compared with people who bought before.</p><div class="r2">
-      <div class="rbox"><h4>Revenue split</h4><p>${curM}</p><div class="rchart" style="height:190px"><canvas id="rp7"></canvas></div></div>
-      <div class="rbox"><h4>Customers and revenue</h4><p>${curM}; change is revenue vs ${prvM}</p>
-        <table class="rtable"><thead><tr><th></th><th>Customers</th><th>Revenue</th><th>Change</th></tr></thead><tbody>
-        <tr><td><b>New</b></td><td>${fmt.int(T.c.newC)}</td><td>${fmt.money(T.c.revNew)}</td><td>${chg(T.c.revNew,T.p.revNew)}</td></tr>
-        <tr><td><b>Returning</b></td><td>${fmt.int(T.c.retC)}</td><td>${fmt.money(T.c.revRet)}</td><td>${chg(T.c.revRet,T.p.revRet)}</td></tr>
-        <tr><td><b>Total</b></td><td><b>${fmt.int(T.c.purch)}</b></td><td><b>${fmt.money(T.c.value)}</b></td><td>${chg(T.c.value,T.p.value)}</td></tr></tbody></table>
-        <p>Average order value <b>${fmt.money2(T.c.aov)}</b> (${fmt.money2(T.p.aov)} in ${prvM}).</p></div></div></section>`,
-    details:()=>`<section class="rsec">${h3('details')}<p class="rintro">Every e-commerce metric for ${cur}, with ${prv} for comparison.</p>
-      <div class="r2">${metricTable(EC_SUPPORT.slice(0,10))}${metricTable(EC_SUPPORT.slice(10))}</div></section>`,
-    glossary:()=>`<section class="rsec">${h3('glossary')}<div class="gloss">
-      <div><b>Purchase</b> · an order completed on your website after someone interacted with an ad.</div>
-      <div><b>Revenue</b> · the value of those purchases (conversion value).</div>
-      <div><b>ROAS</b> · revenue divided by ad spend. 4.00x means $4 back for every $1.</div>
-      <div><b>Cost per purchase</b> · ad spend divided by purchases. Lower is better.</div>
-      <div><b>Average order value</b> · revenue divided by purchases.</div>
-      <div><b>Cart abandonment rate</b> · the share of add-to-carts that did not end in a purchase.</div>
-      <div><b>CTR and CPC</b> · the share of people who clicked an ad, and the average cost of each click.</div>
-      <div><b>CPM</b> · the cost of showing ads 1,000 times.</div>
-      <div><b>Website active users</b> · people active on your site during the month (GA4).</div>
-      <div><b>Change</b> · ▲ / ▼ shows the difference vs ${prv}.</div></div></section>`,
-  });
-  Object.keys(charts).filter(id=>/^rp\d/.test(id)).forEach(id=>{charts[id].destroy();delete charts[id];});
+  ['rp1','rp2','rp3','rp4'].forEach(id=>{if(charts[id]){charts[id].destroy();delete charts[id];}});
   const sources=[...plats,on('website')?'Google Analytics':null].filter(Boolean).join(' · ');
   pg.innerHTML=`
   <div class="rcover">
@@ -1195,38 +1048,10 @@ function renderReport(){
     const months=[...Array(6)].map((_,i)=>addM(state.month,i-5));
     const tots=months.map(mk=>sumRows(campaigns(state.ws,mk).filter(r=>plats.includes(r.platform))));
     mkChart('rp1',{type:'bar',data:{labels:months.map(m=>mLabel(m)),datasets:[
-      {type:'line',label:ec?'Purchases':'Conversions',data:tots.map(x=>ec?x.purch:x.conv),yAxisID:'y1',borderColor:'#1F0C3A',backgroundColor:'#1F0C3A',tension:.35,pointRadius:4},
+      {type:'line',label:'Conversions',data:tots.map(x=>x.conv),yAxisID:'y1',borderColor:'#1F0C3A',backgroundColor:'#1F0C3A',tension:.35,pointRadius:4},
       {label:'Ad spend',data:tots.map(x=>x.spend),backgroundColor:months.map(m=>m===state.month?A:P),borderRadius:6,maxBarThickness:52}]},options:ro(opts(t,{money:true,y1:true}))});
-    if(ec) mkChart('rp5',{type:'bar',data:{labels:months.map(m=>mShort(m)),datasets:[
-      {label:'Revenue',data:tots.map(x=>x.value),backgroundColor:A,borderRadius:5,maxBarThickness:30},
-      {label:'Ad spend',data:tots.map(x=>x.spend),backgroundColor:P,borderRadius:5,maxBarThickness:30}]},options:ro(opts(t,{money:true}))});
   }
-  const donut=(id,labels,vals,colors,f)=>mkChart(id,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderColor:'#fff',borderWidth:3}]},
-    options:{animation:false,responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{usePointStyle:true,boxWidth:8,color:'#5B6474'}},
-      tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0)||1;return ' '+c.label+': '+f(c.parsed)+' ('+(c.parsed/tot*100).toFixed(1)+'%)';}}}}}});
-  const platColors=['#1F0C3A',A==='#1F0C3A'?'#A78BFA':A];
-  if(ec){
-    if(on('funnel')){
-      const acts=steps.slice(1);
-      mkChart('rp2',{type:'bar',data:{labels:acts.map(a=>a[0]),datasets:[
-        {label:curM,data:acts.map(a=>T.c[a[1]]),backgroundColor:A,borderRadius:5,maxBarThickness:28},
-        {label:prvM,data:acts.map(a=>T.p[a[1]]),backgroundColor:P,borderRadius:5,maxBarThickness:28}]},options:ro(opts(t))});
-    }
-    if(on('platforms')&&plats.length>1){
-      donut('rp3',PL.map(x=>x.n),PL.map(x=>x.c.value),platColors,fmt.money);
-      donut('rp8',PL.map(x=>x.n),PL.map(x=>x.c.spend),platColors,fmt.money);
-    }
-    if(on('roas')&&roasRows.length){
-      const o=ro(opts(t,{horizontal:true}));
-      o.scales.x.ticks.callback=v=>v+'x';
-      o.plugins.tooltip.callbacks.label=c=>' '+c.dataset.label+': '+fmt.x(c.parsed.x);
-      mkChart('rp6',{type:'bar',data:{labels:roasRows.map(r=>r.name),datasets:[
-        {label:curM,data:roasRows.map(r=>r.c.roas),backgroundColor:A,borderRadius:4,maxBarThickness:16},
-        {label:prvM,data:roasRows.map(r=>r.p.roas),backgroundColor:P,borderRadius:4,maxBarThickness:16}]},options:o});
-    }
-    if(on('customers')) donut('rp7',['New customers','Returning customers'],[T.c.revNew,T.c.revRet],[A,P],fmt.money);
-  }
-  if(!ec && on('sources')){
+  if(on('sources')){
     const acts=[['Added to cart','atc'],['Completed checkout','co'],['WhatsApp messages','wa'],['Phone calls','calls']];
     mkChart('rp2',{type:'bar',data:{labels:acts.map(a=>a[0]),datasets:[
       {label:curM,data:acts.map(a=>T.c[a[1]]),backgroundColor:A,borderRadius:5,maxBarThickness:24},
@@ -1237,7 +1062,7 @@ function renderReport(){
   if(on('website')) mkChart('rp4',{type:'doughnut',data:{labels:g.channels.map(c=>c.name),datasets:[{data:g.channels.map(c=>c.users),backgroundColor:g.channels.map(c=>c.color),borderColor:'#fff',borderWidth:3}]},
     options:{animation:false,responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{usePointStyle:true,boxWidth:8,color:'#5B6474'}}}}});
 }
-function openReport(){ if(rc.type!==state.biz) setReportType(state.biz); renderPanel(); renderReport(); $('#report').classList.add('open'); document.body.style.overflow='hidden'; $('#rClose').focus(); }
+function openReport(){ renderPanel(); renderReport(); $('#report').classList.add('open'); document.body.style.overflow='hidden'; $('#rClose').focus(); }
 function closeReport(){ $('#report').classList.remove('open'); document.body.style.overflow=''; }
 
 $('#rpage').addEventListener('input',e=>{const el=e.target.closest('[data-edit]'); if(el) rc.text[el.dataset.edit]=el.innerHTML;});
@@ -1250,8 +1075,7 @@ $('#rpanel').addEventListener('input',e=>{
 });
 $('#rpanel').addEventListener('change',e=>{
   const id=e.target.id;
-  if(id==='rpType'){setReportType(e.target.value); $('#fBiz').value=state.biz; render(); renderPanel(); renderReport(); toast('Report type: '+BIZ.find(b=>b.id===state.biz).label); return;}
-  if(id==='rpTpl'){applyTemplate(e.target.value); renderPanel(); renderReport(); $('#fBiz').value=state.biz; render(); toast('Template applied: '+(PRESET_NAMES[rc.template]||userTpls[rc.template]?.name)); return;}
+  if(id==='rpTpl'){applyTemplate(e.target.value); renderPanel(); renderReport(); toast('Template applied: '+(PRESETS[rc.template]?.name||userTpls[rc.template]?.name)); return;}
   if(id==='rpG'||id==='rpM'){const k=id==='rpG'?'google':'meta', other=id==='rpG'?rc.meta:rc.google;
     if(!e.target.checked&&!other){e.target.checked=true; toast('Keep at least one ad platform in the report'); return;}
     rc[k]=e.target.checked; renderReport(); return;}
@@ -1275,9 +1099,9 @@ $('#rpanel').addEventListener('click',e=>{
     const key='u_'+Date.now(); const copy=JSON.parse(JSON.stringify({...rc,text:{}})); copy.template=key;
     userTpls[key]={name,rc:copy}; saveTpls(); rc.template=key; renderPanel(); toast(`Saved template “${esc(name)}”`); return;}
   if(e.target.closest('#rpResetText')){rc.text={}; renderReport(); toast('Text edits cleared'); return;}
-  if(e.target.closest('#rpReset')){const tp=rc.template; const keep={manager:rc.manager,email:rc.email}; rc=freshRC(rc.type); Object.assign(rc,keep); applyTemplate(PRESET_NAMES[tp]||userTpls[tp]?tp:'standard'); renderPanel(); renderReport(); toast('Report reset to template'); return;}
+  if(e.target.closest('#rpReset')){const tp=rc.template; const keep={manager:rc.manager,email:rc.email}; rc=freshRC(); Object.assign(rc,keep); applyTemplate(PRESETS[tp]||userTpls[tp]?tp:'standard'); renderPanel(); renderReport(); toast('Report reset to template'); return;}
 });
-$('#rToggle').onclick=()=>{const w=$('#rwrap'); const hidden=w.classList.toggle('nopanel'); $('#rToggle').setAttribute('aria-pressed',String(!hidden)); $('#rToggle span').textContent=hidden?'Show customize panel':'Hide customize panel'; setTimeout(()=>Object.keys(charts).filter(id=>/^rp\d/.test(id)).forEach(id=>charts[id].resize()),50);};
+$('#rToggle').onclick=()=>{const w=$('#rwrap'); const hidden=w.classList.toggle('nopanel'); $('#rToggle').setAttribute('aria-pressed',String(!hidden)); $('#rToggle span').textContent=hidden?'Show customize panel':'Hide customize panel'; setTimeout(()=>['rp1','rp2','rp3','rp4'].forEach(id=>charts[id]?.resize()),50);};
 
 /* =========================================================
    EXPORT
@@ -1306,16 +1130,14 @@ function printReport(){ document.body.classList.add('printing'); setTimeout(()=>
    ========================================================= */
 function initFilters(){
   $('#fWs').innerHTML=Object.entries(WS).map(([id,w])=>`<option value="${id}">${w.name}</option>`).join('');
-  $('#fBiz').innerHTML=bizOptions();
   $('#fMonth').innerHTML=[...Array(6)].map((_,i)=>addM(CURRENT_MONTH,-i)).map(m=>`<option value="${m}">${mLabel(m)}</option>`).join('');
-  $('#fWs').value=state.ws; $('#fBiz').value=state.biz; $('#fMonth').value=state.month; $('#fCmp').value=state.compare; $('#fStatus').value=state.status;
+  $('#fWs').value=state.ws; $('#fMonth').value=state.month; $('#fCmp').value=state.compare; $('#fStatus').value=state.status;
 }
 $('#fWs').onchange=e=>{state.ws=e.target.value;state.pinned.clear();render();toast('Showing '+WS[state.ws].name);};
-$('#fBiz').onchange=e=>{state.biz=e.target.value;render();toast('Report type: '+BIZ.find(b=>b.id===state.biz).label);};
 $('#fMonth').onchange=e=>{state.month=e.target.value;render();};
 $('#fCmp').onchange=e=>{state.compare=e.target.value;render();};
 $('#fStatus').onchange=e=>{state.status=e.target.value;render();};
-$('#clearFilters').onclick=()=>{Object.assign(state,{ws:'akros',biz:'ecommerce',month:CURRENT_MONTH,compare:'prev',status:'all',search:'',obj:'All'});$('#tSearch').value='';initFilters();render();toast('Filters cleared');};
+$('#clearFilters').onclick=()=>{Object.assign(state,{ws:'akros',month:CURRENT_MONTH,compare:'prev',status:'all',search:'',obj:'All'});$('#tSearch').value='';initFilters();render();toast('Filters cleared');};
 $('#tSearch').oninput=e=>{state.search=e.target.value;render();};
 
 document.addEventListener('click',e=>{
